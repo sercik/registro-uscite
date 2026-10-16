@@ -24,6 +24,12 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans p-2 sm:p-4 pb-24">
 
+  <!-- Banner di caricamento (nascosto di default) -->
+  <div id="loadingBanner" class="hidden fixed top-0 left-0 right-0 z-[90] bg-indigo-600 text-white text-center py-2 text-sm font-semibold shadow-md flex items-center justify-center gap-2">
+    <div class="animate-spin rounded-full h-4 w-4 border-2 border-white/40 border-t-white"></div>
+    <span>Caricamento dati in corso...</span>
+  </div>
+
   <!-- Schermata di Login all'avvio -->
   <div id="lockScreen" class="fixed inset-0 bg-slate-900 flex items-center justify-center p-4 z-[100]">
     <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-xs text-center">
@@ -310,6 +316,7 @@
 
       loadSelectedClassData();
 	  populateClassSelect();   // ← AGGIUNTA: aggiorna il menu ora che ALL_CLASSES è pronto
+	  nascondiBanner();   // ← AGGIUNTA
     }
 
     function changeClass(newClass) {
@@ -1370,17 +1377,16 @@
 
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
-        // Se non c'è sessione, mostra il modulo di login (se esiste ancora)
         const lock = document.getElementById('lockScreen');
         if (lock) {
           lock.style.display = 'flex';
         } else {
-          // L'utente ha fatto logout: ricarica la pagina per ripristinare il lockScreen
           location.reload();
         }
         return;
       }
       document.getElementById('lockScreen').remove();
+      mostraBanner();   // ← AGGIUNTA: mostra il banner quando inizia il caricamento
       document.getElementById('userBadge').innerText = user.email || '';
       await ensureUserRecord(user);
       lastAutoHour = getCurrentHourIndex();
@@ -1389,11 +1395,33 @@
       watchUserRoleAndClasses(user.uid);
       autoLoadClassFiles();
     });
-
+	  
+	function mostraBanner() {
+      const banner = document.getElementById('loadingBanner');
+      if (!banner) return;
+      banner.classList.remove('hidden');
+      banner.style.opacity = '1';
+    }
+    function nascondiBanner() {
+      const banner = document.getElementById('loadingBanner');
+      if (!banner) return;
+      banner.style.transition = 'opacity 0.4s';
+      banner.style.opacity = '0';
+      setTimeout(() => banner.classList.add('hidden'), 400);
+    }
+    
     window.onload = () => {
       document.getElementById('dateSelect').value = TODAY;
       document.getElementById('loginEmail').focus();
     };
+
+// Sicurezza: se dopo 8 secondi il banner è ancora lì, nascondilo
+    setTimeout(() => {
+      const banner = document.getElementById('loadingBanner');
+      if (banner && !banner.classList.contains('hidden')) {
+        nascondiBanner();
+      }
+    }, 8000);
   </script>
 </body>
 </html>
