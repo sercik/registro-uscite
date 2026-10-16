@@ -256,11 +256,9 @@
     // Imposta la persistenza su SESSION: chiudendo o ricaricando la pagina l'utente dovrà loggarsi di nuovo
     auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
-    // Unica fonte di verità per l'elenco delle classi
-    const ALL_CLASSES = ["1BL", "3AL", "3BS", "4AL", "5BL", "5AL"];
-
-    let classDataStore = Object.fromEntries(ALL_CLASSES.map(c => [c, []]));
-
+    // Le classi vengono lette da classi.json all'avvio
+    let ALL_CLASSES = [];
+    let classDataStore = {};
     let selectedClass = null;
     let students = [];
     let state = {}; 
