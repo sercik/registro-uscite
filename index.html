@@ -283,17 +283,28 @@
     ];
 
     async function autoLoadClassFiles() {
-      const classFiles = ALL_CLASSES.map(c => ({ key: c, file: `${c}.json` }));
+      // 1) Leggi la lista delle classi da classi.json (con anti-cache)
+      try {
+        const resClassi = await fetch("classi.json?v=" + Date.now());
+        if (!resClassi.ok) throw new Error("classi.json non trovato");
+        ALL_CLASSES = await resClassi.json();
+        classDataStore = Object.fromEntries(ALL_CLASSES.map(c => [c, []]));
+      } catch (e) {
+        console.error("Impossibile leggere classi.json:", e);
+        alert("Errore: manca il file classi.json o non è raggiungibile.");
+        return;
+      }
 
-      for (const item of classFiles) {
+      // 2) Carica gli studenti di ogni classe (anche qui anti-cache)
+      for (const c of ALL_CLASSES) {
         try {
-          const res = await fetch(item.file);
+          const res = await fetch(`${c}.json?v=` + Date.now());
           if (res.ok) {
             const data = await res.json();
-            classDataStore[item.key] = data.sort((a, b) => a.cognome.localeCompare(b.cognome));
+            classDataStore[c] = data.sort((a, b) => a.cognome.localeCompare(b.cognome));
           }
         } catch (e) {
-          console.warn(`Impossibile caricare ${item.file} via fetch.`, e);
+          console.warn(`Impossibile caricare ${c}.json via fetch.`, e);
         }
       }
 
