@@ -1369,8 +1369,14 @@
 
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
-        // Se non c'è sessione, assicura che il modulo di login rimanga ben visibile
-        document.getElementById('lockScreen').style.display = 'flex';
+        // Se non c'è sessione, mostra il modulo di login (se esiste ancora)
+        const lock = document.getElementById('lockScreen');
+        if (lock) {
+          lock.style.display = 'flex';
+        } else {
+          // L'utente ha fatto logout: ricarica la pagina per ripristinare il lockScreen
+          location.reload();
+        }
         return;
       }
       document.getElementById('lockScreen').remove();
