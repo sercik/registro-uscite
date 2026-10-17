@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registro Uscite Condiviso</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Firebase SDK Compat -->
+  <link rel="stylesheet" href="tailwind.css">
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -13,8 +12,7 @@
     .cell-out { background-color: #fef2f2; border: 2px solid #ef4444; color: #991b1b; }
     .cell-returned { background-color: #fef3c7; border: 2px solid #f59e0b; color: #78350f; }
     .current-hour-col { background-color: #eff6ff; }
-
-    /* Layout: parte superiore fissa, scorrono solo le righe degli alunni */
+    .font-mono { font-family: monospace; }
     html, body { height: 100%; }
     body { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
     thead th { position: sticky; top: 0; z-index: 20; background-color: #f8fafc; box-shadow: inset 0 -1px 0 #e2e8f0; }
@@ -24,13 +22,11 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans p-2 sm:p-4 pb-24">
 
-  <!-- Banner di caricamento (nascosto di default) -->
   <div id="loadingBanner" class="hidden fixed top-0 left-0 right-0 z-[90] bg-indigo-600 text-white text-center py-2 text-sm font-semibold shadow-md flex items-center justify-center gap-2">
     <div class="animate-spin rounded-full h-4 w-4 border-2 border-white/40 border-t-white"></div>
     <span>Caricamento dati in corso...</span>
   </div>
 
-  <!-- Schermata di Login all'avvio -->
   <div id="lockScreen" class="fixed inset-0 bg-slate-900 flex items-center justify-center p-4 z-[100]">
     <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-xs text-center">
       <h2 class="text-lg font-bold text-slate-900 mb-1">Registro Uscite</h2>
@@ -43,7 +39,6 @@
     </div>
   </div>
 
-  <!-- Finestra per Cambio Password Utente -->
   <div id="changePasswordModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-[80]">
     <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl">
       <div class="text-base font-bold text-slate-800 mb-1">Cambia Password</div>
@@ -58,7 +53,6 @@
     </div>
   </div>
 
-  <!-- Finestra di conferma Sì/No -->
   <div id="confirmModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-[60]">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl">
       <div id="confirmText" class="text-base font-bold text-slate-800 mb-4 text-center"></div>
@@ -69,7 +63,6 @@
     </div>
   </div>
 
-  <!-- Finestra di modifica uscita/rientro -->
   <div id="editEntryModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-[65]">
     <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl">
       <div class="text-base font-bold text-slate-800 mb-1">Modifica uscita</div>
@@ -87,28 +80,22 @@
     </div>
   </div>
 
-  <!-- Header e Stato Connessione -->
   <header class="shrink-0 bg-white rounded-xl shadow px-2 py-1.5 sm:p-4 mb-2 sm:mb-4 flex flex-col md:flex-row justify-between md:items-center gap-1 sm:gap-3">
     <div class="flex flex-wrap items-center gap-x-1.5 sm:gap-x-2">
-        <h1 class="text-base sm:text-xl font-bold text-slate-900">Registro Uscite</h1>
-        <span id="syncBadge" class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold">Connessione...</span>
-        <span id="readOnlyBadge" class="hidden text-[10px] bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-semibold">Sola Lettura (Archivio)</span>
-        <button id="unlockBtn" onclick="toggleCorrectionMode()" class="hidden text-[10px] bg-slate-900 text-white px-2 py-0.5 rounded-full font-semibold"></button>
-        <span id="userBadge" class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium"></span>
-        <button onclick="openChangePasswordModal()" title="Cambia Password" class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold">🔑 Cambia Password</button>
-        <button onclick="logout()" title="Esci" class="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-semibold">Esci</button>
-        <span id="clock" class="ml-auto md:ml-0 text-[11px] sm:text-sm font-semibold text-indigo-600">--:--:--</span>
+      <h1 class="text-base sm:text-xl font-bold text-slate-900">Registro Uscite</h1>
+      <span id="syncBadge" class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold">Connessione...</span>
+      <span id="readOnlyBadge" class="hidden text-[10px] bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-semibold">Sola Lettura (Archivio)</span>
+      <button id="unlockBtn" onclick="toggleCorrectionMode()" class="hidden text-[10px] bg-slate-900 text-white px-2 py-0.5 rounded-full font-semibold"></button>
+      <span id="userBadge" class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium"></span>
+      <button onclick="openChangePasswordModal()" title="Cambia Password" class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold">🔑 Cambia Password</button>
+      <button onclick="logout()" title="Esci" class="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-semibold">Esci</button>
+      <span id="clock" class="ml-auto md:ml-0 text-[11px] sm:text-sm font-semibold text-indigo-600">--:--:--</span>
     </div>
-
-    <!-- Controlli Classe e Data -->
     <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-      <!-- Selettore Classe -->
       <div class="flex items-center gap-1 bg-slate-100 p-1 sm:p-1.5 rounded-lg border border-slate-200">
         <label for="classSelect" class="text-xs font-bold text-slate-600 pl-1">Classe:</label>
         <select id="classSelect" onchange="changeClass(this.value)" class="bg-white text-xs border border-slate-300 rounded px-2 py-1 font-bold text-indigo-700 focus:outline-none focus:ring-1 focus:ring-indigo-500"></select>
       </div>
-
-      <!-- Selettore Data -->
       <div class="flex items-center gap-1 bg-slate-100 p-1 sm:p-1.5 rounded-lg border border-slate-200">
         <label for="dateSelect" class="text-xs font-bold text-slate-600 pl-1">Data:</label>
         <input type="date" id="dateSelect" onchange="changeDate(this.value)" class="bg-white text-xs border border-slate-300 rounded px-2 py-1 font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500">
@@ -116,7 +103,6 @@
     </div>
   </header>
 
-  <!-- Contatori -->
   <section class="shrink-0 flex flex-wrap justify-center gap-1.5 mb-2">
     <div class="bg-white px-2.5 py-1 rounded-lg shadow border-l-4 border-emerald-500 flex items-center gap-1.5">
       <span class="text-xs text-slate-500 font-medium">In Classe</span>
@@ -135,7 +121,6 @@
     </div>
   </section>
 
-  <!-- Tabella Matrice -->
   <main class="flex-1 min-h-0 bg-white rounded-xl shadow overflow-auto pb-20">
     <table class="w-full text-left text-xs border-collapse mb-16">
       <thead>
@@ -151,53 +136,33 @@
           <th id="h6" onclick="setActiveHour(6)" title="Clicca per selezionare quest'ora" class="p-2 font-semibold text-center w-28 cursor-pointer select-none">6ª Ora</th>
         </tr>
       </thead>
-      <tbody id="studentGrid" class="divide-y divide-slate-100">
-        <!-- Righe generate dinamicamente -->
-      </tbody>
+      <tbody id="studentGrid" class="divide-y divide-slate-100"></tbody>
     </table>
   </main>
 
-  <!-- Bottom Bar: Gestione Archivio e File -->
   <div class="fixed bottom-0 left-0 right-0 p-3 bg-white/90 backdrop-blur border-t border-slate-200 flex flex-wrap justify-center gap-2 z-40">
-    <button onclick="openArchiveModal()" class="bg-slate-900 text-white font-semibold px-4 py-2 rounded-xl shadow active:scale-95 transition-transform text-xs sm:text-sm flex items-center gap-1">
-      📁 Archivio Registri
-    </button>
-
-    <button onclick="openSummaryModal()" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-xl shadow active:scale-95 transition-transform text-xs sm:text-sm flex items-center gap-1">
-      📊 Consuntivo
-    </button>
-
+    <button onclick="openArchiveModal()" class="bg-slate-900 text-white font-semibold px-4 py-2 rounded-xl shadow active:scale-95 transition-transform text-xs sm:text-sm flex items-center gap-1">📁 Archivio Registri</button>
+    <button onclick="openSummaryModal()" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-xl shadow active:scale-95 transition-transform text-xs sm:text-sm flex items-center gap-1">📊 Consuntivo</button>
     <button id="adminBtn" onclick="openUserManager()" title="Gestione utenti e classi" class="hidden bg-slate-200 text-slate-800 font-semibold px-3 py-2 rounded-xl shadow active:scale-95 transition-transform text-xs sm:text-sm">👥</button>
   </div>
 
-  <!-- Modal Archivio Cloud -->
   <div id="archiveModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl">
       <div class="p-4 border-b flex justify-between items-center">
         <h2 class="text-base font-bold text-slate-800">Archivio Date e Download Completo</h2>
         <button onclick="closeArchiveModal()" class="text-slate-400 text-xl font-bold">&times;</button>
       </div>
-      
-      <!-- Elenco date caricate da Firebase -->
-      <div id="archiveList" class="p-4 overflow-y-auto space-y-2 text-xs flex-1 max-h-[40vh]">
-      </div>
-
-      <!-- Sezione Download Archivio Completo (visibile solo se Admin) -->
+      <div id="archiveList" class="p-4 overflow-y-auto space-y-2 text-xs flex-1 max-h-[40vh]"></div>
       <div id="fullArchiveExportSection" class="hidden p-4 border-t bg-slate-50 rounded-b-2xl space-y-2">
         <div class="text-xs font-bold text-slate-700">Scarica Tutto l'Archivio Storico:</div>
         <div class="grid grid-cols-2 gap-2">
-          <button onclick="exportFullArchiveJSON()" class="bg-indigo-600 text-white text-xs font-semibold py-2 px-3 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-1">
-            💾 Completo (.JSON)
-          </button>
-          <button onclick="exportFullArchiveCSV()" class="bg-emerald-600 text-white text-xs font-semibold py-2 px-3 rounded-lg hover:bg-emerald-700 transition flex items-center justify-center gap-1">
-            📊 Completo (.CSV/Excel)
-          </button>
+          <button onclick="exportFullArchiveJSON()" class="bg-indigo-600 text-white text-xs font-semibold py-2 px-3 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-1">💾 Completo (.JSON)</button>
+          <button onclick="exportFullArchiveCSV()" class="bg-emerald-600 text-white text-xs font-semibold py-2 px-3 rounded-lg hover:bg-emerald-700 transition flex items-center justify-center gap-1">📊 Completo (.CSV/Excel)</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal Consuntivo -->
   <div id="summaryModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4 z-50">
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl">
       <div class="p-3 border-b flex justify-between items-center">
@@ -231,7 +196,6 @@
     </div>
   </div>
 
-  <!-- Modal Gestione Utenti: assegnazione classi -->
   <div id="userManagerModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-[70]">
     <div class="bg-white rounded-2xl max-w-md w-full max-h-[85vh] flex flex-col shadow-2xl">
       <div class="p-4 border-b flex justify-between items-center">
@@ -239,12 +203,17 @@
         <button onclick="closeUserManager()" class="text-slate-400 text-xl font-bold">&times;</button>
       </div>
       <div class="p-3 text-[11px] text-slate-500 border-b bg-slate-50">Gli account si creano dalla console Firebase (Authentication). Qui assegni le classi visibili a ciascun utente: compare dopo il suo primo accesso.</div>
+      <div class="p-3 border-b text-[11px] text-slate-600">
+        <div class="font-semibold mb-1">Elenchi alunni (file .json, uno per classe, es. 3AL.json)</div>
+        <input type="file" id="rosterFiles" accept=".json,application/json" multiple class="text-[11px] w-full mb-1">
+        <button onclick="importRosters()" class="bg-indigo-600 text-white font-semibold px-3 py-1 rounded-lg text-[11px] active:scale-95 transition-transform">Importa su Firebase</button>
+        <div id="rosterMsg" class="mt-1"></div>
+      </div>
       <div id="userManagerBody" class="p-4 overflow-y-auto flex-1"></div>
     </div>
   </div>
 
   <script>
-    // CONFIGURAZIONE FIREBASE
     const firebaseConfig = {
       apiKey: "AIzaSyAtvJcNIBOuZOaPG50FUpw6RWGK-w-hdKs",
       authDomain: "registro-uscite-userpass.firebaseapp.com",
@@ -258,23 +227,31 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
-
-    // Imposta la persistenza su SESSION: chiudendo o ricaricando la pagina l'utente dovrà loggarsi di nuovo
     auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
-    // Le classi vengono lette da classi.json all'avvio
+    // Data locale (non UTC)
+    function localDateStr(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    // Ora del server Firebase: evita differenze tra gli orologi dei telefoni
+    let serverOffset = 0;
+    db.ref('.info/serverTimeOffset').on('value', s => { serverOffset = s.val() || 0; });
+    const nowMs = () => Date.now() + serverOffset;
+
     let ALL_CLASSES = [];
+    let classesLoaded = false;
     let classDataStore = {};
     let selectedClass = null;
     let students = [];
-    let state = {}; 
-    const TODAY = new Date().toISOString().split('T')[0];
+    let state = {};
+    const TODAY = localDateStr(new Date());
     let selectedDate = TODAY;
     let isReadOnly = false;
-    let isCorrectionMode = false; // Attivabile per operare nel passato dagli admin
-    let isAdminUser = false;      // Determinato dal flag role: "admin" in Firebase Database
+    let isCorrectionMode = false;
+    let isAdminUser = false;
     let dbRef = null;
-    let dataReady = false; 
+    let dataReady = false;
 
     let manualHour = null;
     let lastAutoHour = null;
@@ -288,35 +265,71 @@
       { hour: 6, start: "13:15", end: "14:10" }
     ];
 
+    // ID alunno: stessa regola di prima, in più toglie i caratteri vietati nelle chiavi Firebase
+    function sid(s) {
+      return `${s.cognome}_${s.nome}`.replace(/\s+/g, '_').replace(/[.$#\[\]\/]/g, '-');
+    }
+    function studentIdAt(i) { return sid(students[i]); }
+
+    function escapeHtml(t) {
+      return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    // PROPRIETÀ DELLE USCITE: modifica/eliminazione solo per chi le ha inserite (o admin)
+    function canModifyEntry(hData) {
+      if (!hData) return false;
+      if (isAdminUser) return true;
+      const u = auth.currentUser;
+      return !!(u && hData.createdBy && hData.createdBy === u.uid);
+    }
+
+    function txError() {
+      alert("Operazione non riuscita: controlla la connessione o i permessi.");
+    }
+
+    // ELENCHI ALUNNI DA FIREBASE (nodo "classi"): l'admin li legge tutti, gli altri solo le proprie classi
+    const toRoster = v => Object.values(v || {})
+      .filter(s => s && s.cognome && s.nome)
+      .sort((a, b) => a.cognome.localeCompare(b.cognome));
+
+    async function fetchRosters(classNames) {
+      await Promise.all(classNames.filter(c => !(c in classDataStore)).map(async c => {
+        try {
+          classDataStore[c] = toRoster((await db.ref(`classi/${c}`).once('value')).val());
+        } catch (e) {
+          console.warn(`Elenco ${c} non leggibile`, e);
+          classDataStore[c] = [];
+        }
+      }));
+      ALL_CLASSES = Object.keys(classDataStore).sort();
+    }
+
+    async function loadRosters() {
+      const uid = auth.currentUser.uid;
+      const [roleSnap, mineSnap] = await Promise.all([
+        db.ref(`utenti/${uid}/role`).once('value'),
+        db.ref(`utenti/${uid}/classi`).once('value')
+      ]);
+      const mine = mineSnap.val() || {};
+      if (roleSnap.val() === 'admin') {
+        const all = (await db.ref('classi').once('value')).val() || {};
+        Object.keys(all).forEach(c => { classDataStore[c] = toRoster(all[c]); });
+      }
+      await fetchRosters(Object.keys(mine).filter(c => mine[c]));
+    }
+
     async function autoLoadClassFiles() {
-      // 1) Leggi la lista delle classi da classi.json (con anti-cache)
       try {
-        const resClassi = await fetch("classi.json?v=" + Date.now());
-        if (!resClassi.ok) throw new Error("classi.json non trovato");
-        ALL_CLASSES = await resClassi.json();
-        classDataStore = Object.fromEntries(ALL_CLASSES.map(c => [c, []]));
+        await loadRosters();
       } catch (e) {
-        console.error("Impossibile leggere classi.json:", e);
-        alert("Errore: manca il file classi.json o non è raggiungibile.");
+        console.error("Impossibile leggere gli elenchi alunni:", e);
+        alert("Errore nel caricamento degli elenchi alunni da Firebase.");
+        nascondiBanner();
         return;
       }
-
-      // 2) Carica gli studenti di ogni classe (anche qui anti-cache)
-      for (const c of ALL_CLASSES) {
-        try {
-          const res = await fetch(`${c}.json?v=` + Date.now());
-          if (res.ok) {
-            const data = await res.json();
-            classDataStore[c] = data.sort((a, b) => a.cognome.localeCompare(b.cognome));
-          }
-        } catch (e) {
-          console.warn(`Impossibile caricare ${c}.json via fetch.`, e);
-        }
-      }
-
-      loadSelectedClassData();
-	  populateClassSelect();   // ← AGGIUNTA: aggiorna il menu ora che ALL_CLASSES è pronto
-	  nascondiBanner();   // ← AGGIUNTA
+      classesLoaded = true;
+      populateClassSelect();
+      nascondiBanner();
     }
 
     function changeClass(newClass) {
@@ -376,7 +389,7 @@
 
     function updateCurrentHourHighlight() {
       const current = getActiveHour();
-      for(let i = 1; i <= 6; i++) {
+      for (let i = 1; i <= 6; i++) {
         const th = document.getElementById(`h${i}`);
         if (i === current && selectedDate === TODAY) {
           th.classList.add('bg-indigo-100', 'text-indigo-800', 'active-hour-th');
@@ -389,7 +402,8 @@
     function changeDate(newDate) {
       if (!newDate) return;
       selectedDate = newDate;
-      isReadOnly = (selectedDate < TODAY);
+      // Ogni data diversa da oggi (passata O futura) è bloccata
+      isReadOnly = (selectedDate !== TODAY);
       if (!isReadOnly) isCorrectionMode = false;
 
       refreshReadOnlyUI();
@@ -407,7 +421,7 @@
       if (!isOnline) {
         txt = 'Offline';
         cls = 'bg-red-100 text-red-800';
-        title = 'Connessione persa: le modifiche vengono inviate quando torna la rete.';
+        title = 'Connessione persa: non chiudere né ricaricare la pagina, altrimenti le modifiche non inviate vanno perse.';
       } else if (!selectedClass) {
         txt = 'Nessuna classe';
         cls = 'bg-slate-200 text-slate-600';
@@ -432,10 +446,10 @@
       });
     }
 
-    function studentIdAt(i) {
-      const s = students[i];
-      return `${s.cognome}_${s.nome}`.replace(/\s+/g, '_');
-    }
+    // Avvisa se si chiude la pagina mentre si è offline (le scritture in coda andrebbero perse)
+    window.addEventListener('beforeunload', (e) => {
+      if (!isOnline) { e.preventDefault(); e.returnValue = ''; }
+    });
 
     function bindDatabaseForDate(dateStr) {
       dataReady = false;
@@ -452,12 +466,11 @@
         state = cloudState || {};
 
         students.forEach(s => {
-          const id = `${s.cognome}_${s.nome}`.replace(/\s+/g, '_');
-          if (!state[id]) {
-            state[id] = { absent: false, hours: {} };
-          }
+          const id = sid(s);
+          if (!state[id]) state[id] = { absent: false, hours: {} };
         });
 
+        // Crea il giorno solo per oggi (le altre date sono bloccate)
         if (!cloudState && !isReadOnly && students.length > 0) {
           const initial = JSON.parse(JSON.stringify(state));
           ref.transaction(cur => (cur === null ? initial : undefined));
@@ -466,6 +479,9 @@
         dataReady = true;
         updateSyncBadge();
         renderGrid();
+      }, (err) => {
+        console.warn('Lettura non riuscita', err);
+        if (dbRef === ref) { dataReady = false; updateSyncBadge(); }
       });
     }
 
@@ -475,14 +491,14 @@
 
     function saveAbsent(id) {
       if (isLocked() || !dbRef || !dataReady) return;
-      dbRef.child(id).child('absent').set(!!(state[id] && state[id].absent));
+      dbRef.child(id).child('absent').set(!!(state[id] && state[id].absent)).catch(txError);
       updateLEDs();
     }
 
     function saveHour(id, hour) {
       if (isLocked() || !dbRef || !dataReady) return;
       const rec = (state[id] && state[id].hours && state[id].hours[hour]) || null;
-      dbRef.child(id).child('hours').child(String(hour)).set(rec);
+      dbRef.child(id).child('hours').child(String(hour)).set(rec).catch(txError);
       updateLEDs();
     }
 
@@ -498,8 +514,9 @@
       renderGrid();
     }
 
+    // Uscita/rientro tramite transazione: se due colleghi cliccano insieme non si sovrascrivono
     function handleCellClick(id, hour) {
-      if (!dataReady) return;
+      if (!dataReady || !dbRef) return;
       if (isReadOnly) {
         alert(isCorrectionMode
           ? "In modalità correzione non si registrano nuove uscite: puoi eliminare una voce (✎) o cambiare Presente/Assente."
@@ -507,43 +524,46 @@
         return;
       }
 
-      if (!state[id]) state[id] = { absent: false, hours: {} };
-      if (state[id].absent) return;
-      if (!state[id].hours) state[id].hours = {};
-
-      const cellIsOut = state[id].hours[hour] && state[id].hours[hour].status === 'out';
+      const sData = state[id];
+      if (!sData || sData.absent) return;
+      const hours = sData.hours || {};
+      const cur = hours[hour];
+      const cellIsOut = cur && cur.status === 'out';
       if (hour !== getActiveHour() && !cellIsOut) return;
 
-      const activeOutHour = Object.keys(state[id].hours).find(
-        h => state[id].hours[h] && state[id].hours[h].status === 'out'
-      );
-
+      const activeOutHour = Object.keys(hours).find(h => hours[h] && hours[h].status === 'out');
       if (activeOutHour && parseInt(activeOutHour) !== hour) {
         alert("Alunno/a già fuori classe");
         return;
       }
 
-      const record = state[id].hours[hour] || { status: 'idle' };
+      const u = auth.currentUser;
+      if (!u) return;
+      const ref = dbRef.child(id).child('hours').child(String(hour));
+      const nowDate = new Date(nowMs());
+      const timeStr = nowDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-      if (record.status === 'idle' || !record.status) {
-        const now = new Date();
-        state[id].hours[hour] = {
+      if (!cur || !cur.status || cur.status === 'idle') {
+        ref.transaction(c => (c === null ? {
           status: 'out',
-          exitTime: now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          startTimestamp: now.getTime(),
+          exitTime: timeStr,
+          startTimestamp: nowDate.getTime(),
           returnTime: null,
-          elapsedSeconds: 0
-        };
-      } else if (record.status === 'out') {
-        const now = new Date();
-        const elapsed = Math.floor((now.getTime() - record.startTimestamp) / 1000);
-        state[id].hours[hour].status = 'returned';
-        state[id].hours[hour].returnTime = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        state[id].hours[hour].elapsedSeconds = elapsed;
+          elapsedSeconds: 0,
+          createdBy: u.uid,
+          createdByEmail: u.email || ''
+        } : undefined)).then(r => {
+          if (!r.committed) alert("Un altro utente ha già registrato questa uscita.");
+        }).catch(txError);
+      } else if (cur.status === 'out') {
+        ref.transaction(c => ((c && c.status === 'out') ? Object.assign({}, c, {
+          status: 'returned',
+          returnTime: timeStr,
+          elapsedSeconds: Math.max(0, Math.floor((nowDate.getTime() - c.startTimestamp) / 1000))
+        }) : undefined)).then(r => {
+          if (!r.committed) alert("Il rientro risulta già registrato.");
+        }).catch(txError);
       }
-
-      saveHour(id, hour);
-      renderGrid();
     }
 
     let confirmLockTimer = null;
@@ -556,7 +576,7 @@
       document.getElementById('confirmText').innerText = text;
       modal.classList.remove('hidden');
       modal.classList.add('flex');
-      document.getElementById('confirmYes').onclick = () => { hideConfirm(); onYes(); };
+      yesBtn.onclick = () => { hideConfirm(); onYes(); };
       document.getElementById('confirmNo').onclick = () => { hideConfirm(); };
     }
 
@@ -574,6 +594,11 @@
         alert("I dati in archivio sono in sola lettura.");
         return;
       }
+      const hData = state[id] && state[id].hours && state[id].hours[hour];
+      if (!canModifyEntry(hData)) {
+        alert("Puoi modificare o eliminare solo le uscite inserite da te.");
+        return;
+      }
       openEditEntryModal(id, hour);
     }
 
@@ -581,7 +606,7 @@
       const hData = (state[id] && state[id].hours && state[id].hours[hour]) || null;
       if (!hData) return;
       editEntryCtx = { id, hour };
-      const student = students.find(s => `${s.cognome}_${s.nome}`.replace(/\s+/g, '_') === id);
+      const student = students.find(s => sid(s) === id);
       document.getElementById('editEntryInfo').innerText = `${student ? `${student.cognome} ${student.nome}` : id} — Ora ${hour} — ${selectedDate}`;
       document.getElementById('editExitTime').value = hData.exitTime || '';
       document.getElementById('editReturnTime').value = hData.returnTime || '';
@@ -605,6 +630,13 @@
       const exitVal = document.getElementById('editExitTime').value;
       const returnVal = document.getElementById('editReturnTime').value;
 
+      const old = (state[id] && state[id].hours && state[id].hours[hour]) || null;
+      if (!canModifyEntry(old)) {
+        closeEditEntryModal();
+        alert("Puoi modificare o eliminare solo le uscite inserite da te.");
+        return;
+      }
+
       if (!exitVal) {
         errEl.innerText = "L'orario di uscita è obbligatorio.";
         errEl.classList.remove('hidden');
@@ -622,7 +654,6 @@
         return;
       }
 
-      if (!state[id]) state[id] = { absent: false, hours: {} };
       if (!state[id].hours) state[id].hours = {};
 
       const exitDate = new Date(`${selectedDate}T${normalize(exitVal)}`);
@@ -631,7 +662,9 @@
         exitTime: normalize(exitVal),
         startTimestamp: exitDate.getTime(),
         returnTime: returnVal ? normalize(returnVal) : null,
-        elapsedSeconds: returnVal ? (toSeconds(returnVal) - exitSec) : 0
+        elapsedSeconds: returnVal ? (toSeconds(returnVal) - exitSec) : 0,
+        createdBy: old.createdBy || null,          // l'autore originale resta invariato
+        createdByEmail: old.createdByEmail || null
       };
 
       saveHour(id, hour);
@@ -652,27 +685,32 @@
 
     function deleteEntry(id, hour) {
       if (isLocked() || !state[id] || !state[id].hours) return;
+      if (!canModifyEntry(state[id].hours[hour])) {
+        alert("Puoi modificare o eliminare solo le uscite inserite da te.");
+        return;
+      }
       state[id].hours[hour] = null;
       saveHour(id, hour);
       renderGrid();
     }
 
     function updateTimers() {
-      const now = new Date().getTime();
-      Object.keys(state).forEach(id => {
-        if (!state[id].absent && state[id].hours) {
-          Object.keys(state[id].hours).forEach(hour => {
-            const hData = state[id].hours[hour];
-            if (hData && hData.status === 'out') {
-              hData.elapsedSeconds = Math.floor((now - hData.startTimestamp) / 1000);
-              const timerElem = document.getElementById(`timer_${id}_${hour}`);
-              if (timerElem) {
-                timerElem.innerText = formatTime(hData.elapsedSeconds);
+      // I timer scorrono solo per la giornata di oggi
+      if (selectedDate === TODAY) {
+        const now = nowMs();
+        Object.keys(state).forEach(id => {
+          if (state[id] && !state[id].absent && state[id].hours) {
+            Object.keys(state[id].hours).forEach(hour => {
+              const hData = state[id].hours[hour];
+              if (hData && hData.status === 'out') {
+                hData.elapsedSeconds = Math.max(0, Math.floor((now - hData.startTimestamp) / 1000));
+                const timerElem = document.getElementById(`timer_${id}_${hour}`);
+                if (timerElem) timerElem.innerText = formatTime(hData.elapsedSeconds);
               }
-            }
-          });
-        }
-      });
+            });
+          }
+        });
+      }
       updateLEDs();
     }
 
@@ -685,7 +723,7 @@
     function updateLEDs() {
       let absentCount = 0;
       let outCount = 0;
-      let total = students.length;
+      const total = students.length;
 
       Object.keys(state).forEach(id => {
         if (state[id] && state[id].absent) {
@@ -720,7 +758,7 @@
       }
 
       if (students.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400">Nessun alunno trovato per la classe ${selectedClass}. Verificare la presenza del file ${selectedClass}.json.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400">Nessun alunno trovato per la classe ${escapeHtml(selectedClass)}. Chiedi all\'amministratore di importare l\'elenco.</td></tr>`;
         return;
       }
 
@@ -728,7 +766,7 @@
       const lockedDay = isLocked();
 
       students.forEach((s, si) => {
-        const id = `${s.cognome}_${s.nome}`.replace(/\s+/g, '_');
+        const id = sid(s);
         const sData = state[id] || { absent: false, hours: {} };
 
         const tr = document.createElement('tr');
@@ -752,32 +790,39 @@
           let cellStyle = isCurrentCol ? 'current-hour-col' : '';
           let cellContent = `<span class="text-slate-300">-</span>`;
           let deleteBtn = '';
+          let tip = '';
 
           if (!sData.absent) {
             if (hData.status === 'out') {
               cellStyle += ' cell-out font-bold';
               cellContent = `
-                <div>U: ${hData.exitTime}</div>
-                <div id="timer_${id}_${h}" class="text-xs font-mono">${formatTime(hData.elapsedSeconds || 0)}</div>
+                <div>U: ${escapeHtml(hData.exitTime)}</div>
+                ${selectedDate === TODAY
+                  ? `<div id="timer_${escapeHtml(id)}_${h}" class="text-xs font-mono">${formatTime(hData.elapsedSeconds || 0)}</div>`
+                  : `<div class="text-[10px] font-normal">senza rientro</div>`}
               `;
             } else if (hData.status === 'returned') {
               cellStyle += ' cell-returned font-medium';
               cellContent = `
-                <div>U: ${hData.exitTime}</div>
-                <div>R: ${hData.returnTime}</div>
+                <div>U: ${escapeHtml(hData.exitTime)}</div>
+                <div>R: ${escapeHtml(hData.returnTime)}</div>
                 <div class="text-[10px] opacity-80 font-mono">T: ${formatTime(hData.elapsedSeconds || 0)}</div>
               `;
             }
 
-            if (!lockedDay && (hData.status === 'out' || hData.status === 'returned')) {
-              deleteBtn = `<button onclick="event.stopPropagation(); requestEditEntry(studentIdAt(${si}), ${h})" title="Modifica o elimina inserimento" class="absolute top-0.5 right-0.5 w-4 h-4 leading-none text-[10px] font-bold rounded-full bg-white/80 text-slate-600 hover:bg-indigo-600 hover:text-white">✎</button>`;
+            if (hData.status === 'out' || hData.status === 'returned') {
+              if (hData.createdByEmail) tip = `Inserita da ${hData.createdByEmail}`;
+              // La matita compare solo a chi può modificare/eliminare questa voce
+              if (!lockedDay && canModifyEntry(hData)) {
+                deleteBtn = `<button onclick="event.stopPropagation(); requestEditEntry(studentIdAt(${si}), ${h})" title="Modifica o elimina inserimento" class="absolute top-0.5 right-0.5 w-4 h-4 leading-none text-[10px] font-bold rounded-full bg-white/80 text-slate-600 hover:bg-indigo-600 hover:text-white">✎</button>`;
+              }
             }
           }
 
           const clickable = !isReadOnly && (h === currentHour || hData.status === 'out');
 
           html += `
-            <td onclick="handleCellClick(studentIdAt(${si}), ${h})" class="relative p-2 text-center border-r border-slate-100 select-none ${cellStyle} ${clickable ? 'cursor-pointer' : 'cursor-default'}">
+            <td onclick="handleCellClick(studentIdAt(${si}), ${h})" title="${escapeHtml(tip)}" class="relative p-2 text-center border-r border-slate-100 select-none ${cellStyle} ${clickable ? 'cursor-pointer' : 'cursor-default'}">
               ${deleteBtn}
               ${cellContent}
             </td>
@@ -791,8 +836,9 @@
       updateLEDs();
     }
 
-    // GESTIONE ARCHIVIO
+    // ARCHIVIO
     function openArchiveModal() {
+      if (!selectedClass) { alert("Nessuna classe selezionata."); return; }
       const listContainer = document.getElementById('archiveList');
       listContainer.innerHTML = '<div class="text-center text-slate-400 py-4">Caricamento date...</div>';
       document.getElementById('archiveModal').classList.remove('hidden');
@@ -803,15 +849,14 @@
         listContainer.innerHTML = '';
 
         if (!registri) {
-          listContainer.innerHTML = `<div class="text-center text-slate-400 py-4">Nessun registro archiviato per la classe ${selectedClass}.</div>`;
+          listContainer.innerHTML = `<div class="text-center text-slate-400 py-4">Nessun registro archiviato per la classe ${escapeHtml(selectedClass)}.</div>`;
           return;
         }
 
-        const dates = Object.keys(registri).sort().reverse();
-        dates.forEach(d => {
+        Object.keys(registri).sort().reverse().forEach(d => {
           const btn = document.createElement('button');
           btn.className = "w-full text-left p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 flex justify-between items-center font-medium text-slate-700";
-          btn.innerHTML = `<span>📅 ${d} (${selectedClass})</span> <span class="text-xs text-indigo-600 font-bold">Apri →</span>`;
+          btn.innerHTML = `<span>📅 ${escapeHtml(d)} (${escapeHtml(selectedClass)})</span> <span class="text-xs text-indigo-600 font-bold">Apri →</span>`;
           btn.onclick = () => {
             document.getElementById('dateSelect').value = d;
             changeDate(d);
@@ -819,6 +864,8 @@
           };
           listContainer.appendChild(btn);
         });
+      }, () => {
+        listContainer.innerHTML = '<div class="text-center text-red-600 py-4">Impossibile leggere l\'archivio.</div>';
       });
     }
 
@@ -839,13 +886,16 @@
         return;
       }
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `Archivio_Completo_Uscite_${TODAY}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
+      const a = document.createElement('a');
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", `Archivio_Completo_Uscite_${TODAY}.json`);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     }
+
+    // Campo CSV tra virgolette, con le virgolette interne raddoppiate
+    const csvQ = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
 
     async function exportFullArchiveCSV() {
       if (!isAdminUser) return;
@@ -859,45 +909,45 @@
         return;
       }
 
-      let csv = "Classe;Data;Cognome;Nome;Stato;Ora Scolastica;Ora Uscita;Ora Rientro;Durata Uscita (mm:ss)\n";
+      const row = (...f) => f.map(csvQ).join(';') + "\n";
+      let csv = "Classe;Data;Cognome;Nome;Stato;Ora Scolastica;Ora Uscita;Ora Rientro;Durata Uscita (mm:ss);Inserita da\n";
 
       Object.keys(allRegistri).forEach(classKey => {
-          const classRegistri = allRegistri[classKey];
-          const nameById = {};
-          (classDataStore[classKey] || []).forEach(st => {
-            nameById[`${st.cognome}_${st.nome}`.replace(/\s+/g, '_')] = st;
-          });
+        const classRegistri = allRegistri[classKey];
+        const nameById = {};
+        (classDataStore[classKey] || []).forEach(st => { nameById[sid(st)] = st; });
 
-          Object.keys(classRegistri).sort().forEach(dateStr => {
-            const dayState = classRegistri[dateStr];
-            Object.keys(dayState).forEach(studentId => {
-              const sData = dayState[studentId] || {};
-              const known = nameById[studentId];
-              const nameParts = studentId.split('_');
-              const cognome = known ? known.cognome : (nameParts[0] || '');
-              const nome = known ? known.nome : (nameParts.slice(1).join(' ') || '');
+        Object.keys(classRegistri).sort().forEach(dateStr => {
+          const dayState = classRegistri[dateStr] || {};
+          Object.keys(dayState).forEach(studentId => {
+            const sData = dayState[studentId] || {};
+            const known = nameById[studentId];
+            const nameParts = studentId.split('_');
+            const cognome = known ? known.cognome : (nameParts[0] || '');
+            const nome = known ? known.nome : (nameParts.slice(1).join(' ') || '');
 
-              if (sData.absent) {
-                csv += `"${classKey}";"${dateStr}";"${cognome}";"${nome}";"ASSENTE";"-";"-";"-";"-"\n`;
-              } else {
-                let hasExits = false;
-                if (sData.hours) {
-                  Object.keys(sData.hours).forEach(h => {
-                    const hData = sData.hours[h];
-                    if (hData && (hData.status === 'out' || hData.status === 'returned')) {
-                      hasExits = true;
-                      const retTime = hData.returnTime ? hData.returnTime : "In corso";
-                      csv += `"${classKey}";"${dateStr}";"${cognome}";"${nome}";"Presente";"Ora ${h}";"${hData.exitTime || ''}";"${retTime}";"${formatTime(hData.elapsedSeconds || 0)}"\n`;
-                    }
-                  });
-                }
-                if (!hasExits) {
-                  csv += `"${classKey}";"${dateStr}";"${cognome}";"${nome}";"Presente";"-";"-";"-";"Nessuna uscita"\n`;
-                }
+            if (sData.absent) {
+              csv += row(classKey, dateStr, cognome, nome, "ASSENTE", "-", "-", "-", "-", "");
+            } else {
+              let hasExits = false;
+              if (sData.hours) {
+                Object.keys(sData.hours).forEach(h => {
+                  const hData = sData.hours[h];
+                  if (hData && (hData.status === 'out' || hData.status === 'returned')) {
+                    hasExits = true;
+                    const open = hData.status === 'out';
+                    csv += row(classKey, dateStr, cognome, nome, "Presente", `Ora ${h}`, hData.exitTime || '',
+                      open ? "Senza rientro" : (hData.returnTime || ''),
+                      open ? "-" : formatTime(hData.elapsedSeconds || 0),
+                      hData.createdByEmail || '');
+                  }
+                });
               }
-            });
+              if (!hasExits) csv += row(classKey, dateStr, cognome, nome, "Presente", "-", "-", "-", "Nessuna uscita", "");
+            }
           });
         });
+      });
 
       const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -912,12 +962,8 @@
     // CONSUNTIVO
     let summaryRaw = null;
     let summaryStats = [];
-    let summaryCal = [];       
-    let summaryBounds = null;  
-
-    function escapeHtml(t) {
-      return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    }
+    let summaryCal = [];
+    let summaryBounds = null;
 
     function fmtMin(sec) {
       if (!sec) return '0 min';
@@ -931,6 +977,7 @@
     }
 
     function openSummaryModal() {
+      if (!selectedClass) { alert("Nessuna classe selezionata."); return; }
       const modal = document.getElementById('summaryModal');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -1034,7 +1081,7 @@
       const bd = boundDates.length ? boundDates : dates;
       summaryBounds = bd.length ? { first: bd[0].slice(0, 7), last: bd[bd.length - 1].slice(0, 7) } : null;
 
-      const list = students.map(s => ({ id: `${s.cognome}_${s.nome}`.replace(/\s+/g, '_'), name: `${s.cognome} ${s.nome}` }));
+      const list = students.map(s => ({ id: sid(s), name: `${s.cognome} ${s.nome}` }));
       const known = new Set(list.map(x => x.id));
       dates.forEach(d => Object.keys(summaryRaw[d] || {}).forEach(id => {
         if (!known.has(id)) { known.add(id); list.push({ id, name: id.replace(/_/g, ' ') }); }
@@ -1109,10 +1156,10 @@
         btn.classList.add('hidden');
         return;
       }
-      
+      badge.classList.remove('hidden');
       badge.innerText = isCorrectionMode ? 'Modalità correzione' : 'Sola Lettura (Archivio)';
       badge.className = `text-[10px] ${isCorrectionMode ? 'bg-violet-100 text-violet-800' : 'bg-red-100 text-red-800'} px-2 py-0.5 rounded-full font-semibold`;
-      
+
       if (isAdminUser) {
         btn.innerText = isCorrectionMode ? '🔒 Blocca' : '🔓 Correggi';
         btn.classList.remove('hidden');
@@ -1128,7 +1175,7 @@
       renderGrid();
     }
 
-    // GESTIONE CAMBIO PASSWORD UTENTE
+    // CAMBIO PASSWORD
     function openChangePasswordModal() {
       document.getElementById('newPwd').value = '';
       document.getElementById('confirmNewPwd').value = '';
@@ -1155,7 +1202,6 @@
         errEl.classList.remove('hidden');
         return;
       }
-
       if (newPwd !== confirmPwd) {
         errEl.innerText = "Le due password non coincidono.";
         errEl.classList.remove('hidden');
@@ -1179,7 +1225,7 @@
       }
     }
 
-    // GESTIONE UTENTI (protetta dal ruolo admin su Firebase)
+    // GESTIONE UTENTI (solo admin)
     function openUserManager() {
       if (!isAdminUser) return;
       const modal = document.getElementById('userManagerModal');
@@ -1221,15 +1267,15 @@
           <div class="flex justify-between items-center mb-1">
             <div class="text-xs font-bold text-slate-700">${escapeHtml(u.email || uid)}</div>
             <label class="flex items-center gap-1 text-[11px] font-semibold text-violet-700 bg-violet-50 px-2 py-0.5 rounded cursor-pointer">
-              <input type="checkbox" data-uid="${uid}" ${isUserAdmin ? 'checked' : ''} onchange="toggleUserAdminRole(this)">
+              <input type="checkbox" data-uid="${escapeHtml(uid)}" ${isUserAdmin ? 'checked' : ''} onchange="toggleUserAdminRole(this)">
               Amministratore
             </label>
           </div>
           <div class="flex flex-wrap gap-2 mt-2">
             ${ALL_CLASSES.map(c => `
               <label class="flex items-center gap-1 text-[11px] bg-slate-100 px-2 py-1 rounded-lg cursor-pointer">
-                <input type="checkbox" data-uid="${uid}" data-classe="${c}" ${classi[c] ? 'checked' : ''} onchange="toggleUserClass(this)">
-                ${c}
+                <input type="checkbox" data-uid="${escapeHtml(uid)}" data-classe="${escapeHtml(c)}" ${classi[c] ? 'checked' : ''} onchange="toggleUserClass(this)">
+                ${escapeHtml(c)}
               </label>
             `).join('')}
           </div>
@@ -1263,10 +1309,50 @@
       checkbox.disabled = false;
     }
 
+    // IMPORTAZIONE ELENCHI ALUNNI (solo admin): ogni file 3AL.json -> nodo classi/3AL
+    async function importRosters() {
+      if (!isAdminUser) return;
+      const msg = document.getElementById('rosterMsg');
+      const files = Array.from(document.getElementById('rosterFiles').files)
+        .filter(f => f.name.toLowerCase() !== 'classi.json');
+      if (!files.length) { msg.innerText = 'Seleziona i file .json delle classi.'; return; }
+
+      const valid = [], skipped = [];
+      for (const f of files) {
+        const name = f.name.replace(/\.json$/i, '');
+        try {
+          const data = JSON.parse(await f.text());
+          const okFormat = Array.isArray(data) && data.length > 0 &&
+            data.every(x => x && typeof x.cognome === 'string' && typeof x.nome === 'string');
+          if (okFormat && /^[A-Za-z0-9_-]+$/.test(name)) valid.push({ name, data });
+          else skipped.push(f.name);
+        } catch (e) { skipped.push(f.name); }
+      }
+      if (!valid.length) { msg.innerText = 'Nessun file valido. Saltati: ' + skipped.join(', '); return; }
+
+      if (!confirm(`Importare gli elenchi di: ${valid.map(v => v.name).join(', ')}?\nGli elenchi già presenti per queste classi verranno sostituiti.`)) return;
+
+      const done = [];
+      for (const v of valid) {
+        try {
+          await withTimeout(db.ref(`classi/${v.name}`).set(v.data), 8000);
+          classDataStore[v.name] = toRoster(v.data);
+          done.push(`${v.name} (${v.data.length})`);
+        } catch (e) { skipped.push(v.name + ' (non salvato)'); }
+      }
+      ALL_CLASSES = Object.keys(classDataStore).sort();
+      msg.innerText = `Importati: ${done.join(', ') || 'nessuno'}.` + (skipped.length ? ` Saltati: ${skipped.join(', ')}.` : '');
+      document.getElementById('rosterFiles').value = '';
+      renderUserManager();
+      populateClassSelect();
+      if (selectedClass) loadSelectedClassData();
+    }
+
     // LOGIN / LOGOUT
-    let myClasses = {};        
-    let myClassesRef = null;   
+    let myClasses = {};
+    let myClassesRef = null;
     let userRoleRef = null;
+    let appStarted = false;
 
     function loginErrorMessage(e) {
       const code = e && e.code;
@@ -1320,15 +1406,12 @@
       auth.signOut().then(() => location.reload());
     }
 
+    // Scrive SOLO il campo email: classi e ruolo li modifica solo l'admin (regole del database)
     async function ensureUserRecord(user) {
       const ref = db.ref(`utenti/${user.uid}`);
       try {
-        const snap = await withTimeout(ref.once('value'), 6000);
-        if (!snap.exists()) {
-          await ref.set({ email: user.email, classi: {} });
-        } else if (snap.val().email !== user.email) {
-          await ref.child('email').set(user.email);
-        }
+        const snap = await withTimeout(ref.child('email').once('value'), 6000);
+        if (snap.val() !== user.email) await ref.child('email').set(user.email);
       } catch (e) {
         console.warn('Impossibile creare/verificare il profilo utente', e);
       }
@@ -1336,25 +1419,24 @@
 
     function watchUserRoleAndClasses(uid) {
       myClassesRef = db.ref(`utenti/${uid}/classi`);
-      myClassesRef.on('value', snap => {
+      myClassesRef.on('value', async snap => {
         myClasses = snap.val() || {};
+        if (classesLoaded) await fetchRosters(Object.keys(myClasses).filter(c => myClasses[c]));
         populateClassSelect();
       });
 
       userRoleRef = db.ref(`utenti/${uid}/role`);
       userRoleRef.on('value', snap => {
         isAdminUser = (snap.val() === 'admin');
-        
-        // Elementi visibili solo agli admin
         document.getElementById('adminBtn').classList.toggle('hidden', !isAdminUser);
         document.getElementById('fullArchiveExportSection').classList.toggle('hidden', !isAdminUser);
-
         refreshReadOnlyUI();
         renderGrid();
       });
     }
 
     function populateClassSelect() {
+      if (!classesLoaded) return;   // si popola solo quando l'elenco classi è pronto
       const sel = document.getElementById('classSelect');
       const assigned = ALL_CLASSES.filter(c => myClasses && myClasses[c]);
 
@@ -1368,7 +1450,7 @@
 
       sel.disabled = false;
       const keepCurrent = selectedClass && assigned.includes(selectedClass);
-      sel.innerHTML = assigned.map(c => `<option value="${c}">${c}</option>`).join('');
+      sel.innerHTML = assigned.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
       selectedClass = keepCurrent ? selectedClass : assigned[0];
       sel.value = selectedClass;
 
@@ -1378,15 +1460,15 @@
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
         const lock = document.getElementById('lockScreen');
-        if (lock) {
-          lock.style.display = 'flex';
-        } else {
-          location.reload();
-        }
+        if (lock) lock.style.display = 'flex';
+        else location.reload();
         return;
       }
-      document.getElementById('lockScreen').remove();
-      mostraBanner();   // ← AGGIUNTA: mostra il banner quando inizia il caricamento
+      if (appStarted) return;   // evita doppia inizializzazione
+      appStarted = true;
+      const lock = document.getElementById('lockScreen');
+      if (lock) lock.remove();
+      mostraBanner();
       document.getElementById('userBadge').innerText = user.email || '';
       await ensureUserRecord(user);
       lastAutoHour = getCurrentHourIndex();
@@ -1395,8 +1477,8 @@
       watchUserRoleAndClasses(user.uid);
       autoLoadClassFiles();
     });
-	  
-	function mostraBanner() {
+
+    function mostraBanner() {
       const banner = document.getElementById('loadingBanner');
       if (!banner) return;
       banner.classList.remove('hidden');
@@ -1409,18 +1491,15 @@
       banner.style.opacity = '0';
       setTimeout(() => banner.classList.add('hidden'), 400);
     }
-    
+
     window.onload = () => {
       document.getElementById('dateSelect').value = TODAY;
       document.getElementById('loginEmail').focus();
     };
 
-// Sicurezza: se dopo 8 secondi il banner è ancora lì, nascondilo
     setTimeout(() => {
       const banner = document.getElementById('loadingBanner');
-      if (banner && !banner.classList.contains('hidden')) {
-        nascondiBanner();
-      }
+      if (banner && !banner.classList.contains('hidden')) nascondiBanner();
     }, 8000);
   </script>
 </body>
