@@ -141,25 +141,24 @@
   </main>
 
   <div class="fixed bottom-0 left-0 right-0 p-3 bg-white/90 backdrop-blur border-t border-slate-200 flex flex-wrap justify-center gap-2 z-40">
-    <button onclick="openArchiveModal()" class="bg-slate-900 text-white font-semibold px-4 py-2 rounded-xl shadow active:scale-95 transition-transform text-xs sm:text-sm flex items-center gap-1">📁 Archivio Registri</button>
     <button onclick="openSummaryModal()" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-xl shadow active:scale-95 transition-transform text-xs sm:text-sm flex items-center gap-1">📊 Consuntivo</button>
     <button id="adminBtn" onclick="openUserManager()" title="Gestione utenti e classi" class="hidden bg-slate-200 text-slate-800 font-semibold px-3 py-2 rounded-xl shadow active:scale-95 transition-transform text-xs sm:text-sm">👥</button>
+    <button id="exportBtn" onclick="openExportModal()" title="Scarica i dati della classe" class="hidden bg-slate-900 text-white font-semibold px-4 py-2 rounded-xl shadow active:scale-95 transition-transform text-xs sm:text-sm flex items-center gap-1">💾 Scarica dati</button>
   </div>
 
-  <div id="archiveModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl">
-      <div class="p-4 border-b flex justify-between items-center">
-        <h2 class="text-base font-bold text-slate-800">Archivio Date e Download Completo</h2>
-        <button onclick="closeArchiveModal()" class="text-slate-400 text-xl font-bold">&times;</button>
+  <div id="exportModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl p-4">
+      <div class="flex justify-between items-center mb-2">
+        <h2 class="text-base font-bold text-slate-800">Scarica i dati della classe</h2>
+        <button onclick="closeExportModal()" class="text-slate-400 text-xl font-bold">&times;</button>
       </div>
-      <div id="archiveList" class="p-4 overflow-y-auto space-y-2 text-xs flex-1 max-h-[40vh]"></div>
-      <div id="fullArchiveExportSection" class="hidden p-4 border-t bg-slate-50 rounded-b-2xl space-y-2">
-        <div class="text-xs font-bold text-slate-700">Scarica Tutto l'Archivio Storico:</div>
-        <div class="grid grid-cols-2 gap-2">
-          <button onclick="exportFullArchiveJSON()" class="bg-indigo-600 text-white text-xs font-semibold py-2 px-3 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-1">💾 Completo (.JSON)</button>
-          <button onclick="exportFullArchiveCSV()" class="bg-emerald-600 text-white text-xs font-semibold py-2 px-3 rounded-lg hover:bg-emerald-700 transition flex items-center justify-center gap-1">📊 Completo (.CSV/Excel)</button>
-        </div>
+      <div id="exportClassLabel" class="text-sm font-bold text-indigo-700 mb-2"></div>
+      <p class="text-[11px] text-slate-500 mb-3"><b>Tabella uscite</b>: la classe in alto, poi una riga per ogni uscita (alunno, data, ora di uscita e di rientro, durata, docente), pronta per Excel. <b>Copia completa</b>: tutti i registri della classe, anche presenze e assenze, più l'elenco alunni, per ricostruire i dati in locale.</p>
+      <div class="grid gap-2">
+        <button onclick="exportClassCSV()" class="bg-emerald-600 text-white text-xs font-semibold py-2 px-3 rounded-lg hover:bg-emerald-700 transition">📊 Tabella uscite (.CSV / Excel)</button>
+        <button onclick="exportClassJSON()" class="bg-indigo-600 text-white text-xs font-semibold py-2 px-3 rounded-lg hover:bg-indigo-700 transition">💾 Copia completa (.JSON)</button>
       </div>
+      <div id="exportMsg" class="mt-2 text-[11px] text-slate-600"></div>
     </div>
   </div>
 
@@ -836,127 +835,113 @@
       updateLEDs();
     }
 
-    // ARCHIVIO
-    function openArchiveModal() {
-      if (!selectedClass) { alert("Nessuna classe selezionata."); return; }
-      const listContainer = document.getElementById('archiveList');
-      listContainer.innerHTML = '<div class="text-center text-slate-400 py-4">Caricamento date...</div>';
-      document.getElementById('archiveModal').classList.remove('hidden');
-      document.getElementById('archiveModal').classList.add('flex');
+    // ESPORTAZIONE DATI DELLA CLASSE VISUALIZZATA (solo admin)
+    function setExportMsg(t) { document.getElementById('exportMsg').innerText = t; }
 
-      db.ref(`registri/${selectedClass}`).once('value', (snapshot) => {
-        const registri = snapshot.val();
-        listContainer.innerHTML = '';
-
-        if (!registri) {
-          listContainer.innerHTML = `<div class="text-center text-slate-400 py-4">Nessun registro archiviato per la classe ${escapeHtml(selectedClass)}.</div>`;
-          return;
-        }
-
-        Object.keys(registri).sort().reverse().forEach(d => {
-          const btn = document.createElement('button');
-          btn.className = "w-full text-left p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 flex justify-between items-center font-medium text-slate-700";
-          btn.innerHTML = `<span>📅 ${escapeHtml(d)} (${escapeHtml(selectedClass)})</span> <span class="text-xs text-indigo-600 font-bold">Apri →</span>`;
-          btn.onclick = () => {
-            document.getElementById('dateSelect').value = d;
-            changeDate(d);
-            closeArchiveModal();
-          };
-          listContainer.appendChild(btn);
-        });
-      }, () => {
-        listContainer.innerHTML = '<div class="text-center text-red-600 py-4">Impossibile leggere l\'archivio.</div>';
-      });
-    }
-
-    function closeArchiveModal() {
-      document.getElementById('archiveModal').classList.add('hidden');
-      document.getElementById('archiveModal').classList.remove('flex');
-    }
-
-    async function exportFullArchiveJSON() {
+    function openExportModal() {
       if (!isAdminUser) return;
-      const data = {};
-      for (const c of ALL_CLASSES) {
-        const snap = await db.ref(`registri/${c}`).once('value');
-        if (snap.exists()) data[c] = snap.val();
-      }
-      if (Object.keys(data).length === 0) {
-        alert("L'archivio è vuoto. Nessun dato da scaricare.");
-        return;
-      }
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+      if (!selectedClass) { alert("Nessuna classe selezionata."); return; }
+      setExportMsg('');
+      document.getElementById('exportClassLabel').innerText = `Classe ${selectedClass}`;
+      const m = document.getElementById('exportModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeExportModal() {
+      const m = document.getElementById('exportModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    function downloadFile(content, filename, mime) {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.setAttribute("href", dataStr);
-      a.setAttribute("download", `Archivio_Completo_Uscite_${TODAY}.json`);
+      a.href = url;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    // Registri della classe + corrispondenza uid -> email dei docenti
+    async function collectClassData(c) {
+      const registri = (await db.ref(`registri/${c}`).once('value')).val() || {};
+      const ut = (await db.ref('utenti').once('value')).val() || {};
+      const docenti = {};
+      Object.keys(ut).forEach(uid => { docenti[uid] = (ut[uid] && ut[uid].email) || ''; });
+      return { registri, docenti };
+    }
+
+    async function exportClassJSON() {
+      if (!isAdminUser || !selectedClass) return;
+      const c = selectedClass;
+      setExportMsg('Preparazione in corso...');
+      try {
+        const { registri, docenti } = await collectClassData(c);
+        if (Object.keys(registri).length === 0) { setExportMsg(`Nessun dato registrato per la classe ${c}.`); return; }
+        // Nella copia restano solo i docenti che compaiono in questa classe
+        const usati = {};
+        Object.values(registri).forEach(day => Object.values(day || {}).forEach(rec => {
+          Object.values((rec && rec.hours) || {}).forEach(x => {
+            if (x && x.createdBy && docenti[x.createdBy]) usati[x.createdBy] = docenti[x.createdBy];
+          });
+        }));
+        const out = { versione: 1, classe: c, esportatoIl: new Date().toISOString(), docenti: usati, alunni: classDataStore[c] || [], registri };
+        downloadFile(JSON.stringify(out, null, 2), `Dati_${c}_${TODAY}.json`, 'application/json');
+        setExportMsg('Download avviato.');
+      } catch (e) {
+        setExportMsg('Errore nel download: ' + (e && e.message ? e.message : e));
+      }
     }
 
     // Campo CSV tra virgolette, con le virgolette interne raddoppiate
     const csvQ = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
 
-    async function exportFullArchiveCSV() {
-      if (!isAdminUser) return;
-      const allRegistri = {};
-      for (const c of ALL_CLASSES) {
-        const snap = await db.ref(`registri/${c}`).once('value');
-        if (snap.exists()) allRegistri[c] = snap.val();
-      }
-      if (Object.keys(allRegistri).length === 0) {
-        alert("L'archivio è vuoto. Nessun dato da scaricare.");
-        return;
-      }
-
-      const row = (...f) => f.map(csvQ).join(';') + "\n";
-      let csv = "Classe;Data;Cognome;Nome;Stato;Ora Scolastica;Ora Uscita;Ora Rientro;Durata Uscita (mm:ss);Inserita da\n";
-
-      Object.keys(allRegistri).forEach(classKey => {
-        const classRegistri = allRegistri[classKey];
+    async function exportClassCSV() {
+      if (!isAdminUser || !selectedClass) return;
+      const c = selectedClass;
+      setExportMsg('Preparazione in corso...');
+      try {
+        const { registri, docenti } = await collectClassData(c);
         const nameById = {};
-        (classDataStore[classKey] || []).forEach(st => { nameById[sid(st)] = st; });
-
-        Object.keys(classRegistri).sort().forEach(dateStr => {
-          const dayState = classRegistri[dateStr] || {};
-          Object.keys(dayState).forEach(studentId => {
-            const sData = dayState[studentId] || {};
-            const known = nameById[studentId];
-            const nameParts = studentId.split('_');
-            const cognome = known ? known.cognome : (nameParts[0] || '');
-            const nome = known ? known.nome : (nameParts.slice(1).join(' ') || '');
-
-            if (sData.absent) {
-              csv += row(classKey, dateStr, cognome, nome, "ASSENTE", "-", "-", "-", "-", "");
-            } else {
-              let hasExits = false;
-              if (sData.hours) {
-                Object.keys(sData.hours).forEach(h => {
-                  const hData = sData.hours[h];
-                  if (hData && (hData.status === 'out' || hData.status === 'returned')) {
-                    hasExits = true;
-                    const open = hData.status === 'out';
-                    csv += row(classKey, dateStr, cognome, nome, "Presente", `Ora ${h}`, hData.exitTime || '',
-                      open ? "Senza rientro" : (hData.returnTime || ''),
-                      open ? "-" : formatTime(hData.elapsedSeconds || 0),
-                      hData.createdByEmail || '');
-                  }
-                });
-              }
-              if (!hasExits) csv += row(classKey, dateStr, cognome, nome, "Presente", "-", "-", "-", "Nessuna uscita", "");
-            }
+        (classDataStore[c] || []).forEach(st => { nameById[sid(st)] = st; });
+        const rows = [];
+        Object.keys(registri).forEach(d => {
+          const day = registri[d] || {};
+          Object.keys(day).forEach(id => {
+            const rec = day[id] || {};
+            if (rec.absent || !rec.hours) return;
+            const known = nameById[id];
+            const parts = id.split('_');
+            const cognome = known ? known.cognome : (parts[0] || '');
+            const nome = known ? known.nome : parts.slice(1).join(' ');
+            Object.keys(rec.hours).forEach(h => {
+              const x = rec.hours[h];
+              if (!x || (x.status !== 'out' && x.status !== 'returned')) return;
+              const open = x.status === 'out';
+              const sec = open ? '' : (x.elapsedSeconds || 0);
+              const docente = x.createdByEmail || docenti[x.createdBy] || 'non registrato';
+              rows.push([cognome, nome, d, Number(h), x.exitTime || '', open ? '' : (x.returnTime || ''),
+                open ? 'Senza rientro' : formatTime(sec), sec, docente]);
+            });
           });
         });
-      });
+        if (rows.length === 0) { setExportMsg(`Nessuna uscita registrata per la classe ${c}.`); return; }
 
-      const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `Archivio_Completo_Uscite_${TODAY}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+        rows.sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]) || a[2].localeCompare(b[2]) || (a[3] - b[3]));
+        let csv = `${csvQ('Classe')};${csvQ(c)}\n\n`;
+        csv += 'Cognome;Nome;Data;Ora scolastica;Ora uscita;Ora rientro;Durata (mm:ss);Durata (secondi);Docente\n';
+        rows.forEach(r => {
+          csv += r.map((v, i) => (i === 3 || (i === 7 && v !== '')) ? v : csvQ(v)).join(';') + '\n';
+        });
+        downloadFile('\ufeff' + csv, `Uscite_${c}_${TODAY}.csv`, 'text/csv;charset=utf-8;');
+        setExportMsg(`Download avviato: ${rows.length} uscite.`);
+      } catch (e) {
+        setExportMsg('Errore nel download: ' + (e && e.message ? e.message : e));
+      }
     }
 
     // CONSUNTIVO
@@ -1429,7 +1414,7 @@
       userRoleRef.on('value', snap => {
         isAdminUser = (snap.val() === 'admin');
         document.getElementById('adminBtn').classList.toggle('hidden', !isAdminUser);
-        document.getElementById('fullArchiveExportSection').classList.toggle('hidden', !isAdminUser);
+        document.getElementById('exportBtn').classList.toggle('hidden', !isAdminUser);
         refreshReadOnlyUI();
         renderGrid();
       });
